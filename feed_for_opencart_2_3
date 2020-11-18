@@ -1,0 +1,32 @@
+<?php
+class ControllerExtensionFeedOffers extends Controller {
+	public function index() {
+		if ($this->config->get('google_sitemap_status')) {
+			$output  = '<?xml version="1.0" encoding="UTF-8"?>';
+			$output .= '<offers>';
+			$this->load->model('catalog/product');			
+			$host = $this->config->get('config_secure') ? str_replace('http:/', 'https:/', $this->config->get('config_ssl')) : $this->config->get('config_url');
+
+			$products = $this->model_catalog_product->getProducts();
+
+			foreach ($products as $product) {
+				if ($product['image']) {
+					$output .= '<offer>';
+					$output .= '<name>' . $product['name'] . '</name>';
+					$output .= '<photos>';
+					$output .= '<photo>' . $host . 'image/' . $product['image'] . '</photo>';
+					$additional_images = $this->model_catalog_product->getProductImages($product['product_id']);
+						foreach ($additional_images as $additional_image) {
+							$output .= '<photo>' . $host . 'image/'. $additional_image['image'] . '</photo>';
+						}
+					$output .= '</photos>';
+					$output .= '</offer>';
+				}
+			}
+		
+			$output .= '</offers>';
+			$this->response->addHeader('Content-Type: application/xml');
+			$this->response->setOutput($output);
+		}
+	}
+}
